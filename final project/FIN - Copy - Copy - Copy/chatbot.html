@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinXplorers AI Assistant</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .chat-container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .chat-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .chat-header h1 {
+            color: #2c3e50;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .chat-header p {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+        }
+
+        .chat-box {
+            height: 500px;
+            overflow-y: auto;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border-radius: 10px;
+            max-width: 80%;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .user-message {
+            background: #007bff;
+            color: white;
+            margin-left: auto;
+        }
+
+        .bot-message {
+            background: #e9ecef;
+            color: #2c3e50;
+            margin-right: auto;
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 1rem;
+            background: #e9ecef;
+            border-radius: 10px;
+            width: fit-content;
+            margin-right: auto;
+            margin-bottom: 1rem;
+        }
+
+        .typing-indicator span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #6c757d;
+            border-radius: 50%;
+            margin: 0 2px;
+            animation: typing 1s infinite;
+        }
+
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+        .chat-input {
+            display: flex;
+            gap: 1rem;
+        }
+
+        #userInput {
+            flex: 1;
+            padding: 1rem;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        #userInput:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+
+        .send-btn {
+            padding: 1rem 2rem;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .send-btn:hover {
+            background: #0056b3;
+        }
+
+        .send-btn i {
+            font-size: 1.2rem;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes typing {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        .suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .suggestion-btn {
+            padding: 0.5rem 1rem;
+            background: #e9ecef;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .suggestion-btn:hover {
+            background: #dee2e6;
+        }
+
+        .error-message {
+            color: #dc3545;
+            text-align: center;
+            padding: 1rem;
+            background: #f8d7da;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="logo">
+                <a href="index.html">
+                    <img src="FinvedaLogo.png" alt="FinXplorers Logo" class="logo-img">
+                </a>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="index.html#services">Services</a></li>
+                <li><a href="index.html#about">About</a></li>
+                <li><a href="index.html#contact">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <div class="chat-container">
+            <div class="chat-header">
+                <h1>FinXplorers AI Assistant</h1>
+                <p>Your personal financial guide powered by advanced AI</p>
+            </div>
+
+            <div class="error-message" id="errorMessage"></div>
+
+            <div class="chat-box" id="chatBox">
+                <div class="message bot-message">
+                    Hello! I'm your FinXplorers AI assistant. I can help you with:
+                    <ul>
+                        <li>Investment strategies and portfolio management</li>
+                        <li>Stock market analysis and predictions</li>
+                        <li>Personal finance and budgeting</li>
+                        <li>Tax planning and optimization</li>
+                        <li>Banking and credit management</li>
+                    </ul>
+                    How can I assist you today?
+                </div>
+            </div>
+
+            <div class="typing-indicator" id="typingIndicator">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+            <div class="chat-input">
+                <input type="text" id="userInput" placeholder="Type your financial question here..." autocomplete="off">
+                <button class="send-btn" onclick="sendMessage()">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+
+            <div class="suggestions">
+                <button class="suggestion-btn" onclick="useSuggestion('How do I start investing in stocks?')">Stock Investing</button>
+                <button class="suggestion-btn" onclick="useSuggestion('What are the best mutual funds?')">Mutual Funds</button>
+                <button class="suggestion-btn" onclick="useSuggestion('How to save tax?')">Tax Planning</button>
+                <button class="suggestion-btn" onclick="useSuggestion('What is SIP?')">SIP</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const chatBox = document.getElementById('chatBox');
+        const userInput = document.getElementById('userInput');
+        const typingIndicator = document.getElementById('typingIndicator');
+        const errorMessage = document.getElementById('errorMessage');
+
+        // Financial knowledge base
+        const financialKnowledge = {
+            'stock market': {
+                keywords: ['stock', 'market', 'shares', 'trading', 'nse', 'bse'],
+                response: 'Indian Stock Market Basics:\n\n1. Main Exchanges:\n   - NSE (National Stock Exchange)\n   - BSE (Bombay Stock Exchange)\n\n2. Key Indices:\n   - NIFTY 50\n   - SENSEX\n\n3. Trading Hours:\n   - 9:15 AM to 3:30 PM (IST)\n\n4. Important Websites:\n   - www.nseindia.com\n   - www.bseindia.com\n\n5. Basic Steps to Start:\n   - Open a Demat account\n   - Complete KYC\n   - Link bank account\n   - Start with small investments\n\nWould you like specific information about any of these aspects?'
+            },
+            'mutual funds': {
+                keywords: ['mutual fund', 'funds', 'sip', 'systematic investment'],
+                response: 'Mutual Funds Information:\n\n1. Types:\n   - Equity Funds\n   - Debt Funds\n   - Balanced Funds\n   - Index Funds\n\n2. Benefits:\n   - Professional management\n   - Diversification\n   - Liquidity\n   - Tax benefits\n\n3. How to invest:\n   - Through AMC website\n   - Through broker\n   - Through bank\n\n4. Important Websites:\n   - www.amfiindia.com\n   - www.mutualfundindia.com\n\nWould you like to know about specific mutual fund schemes?'
+            },
+            'tax': {
+                keywords: ['tax', 'taxation', 'income tax', 'gst', 'tax saving'],
+                response: 'Tax Information:\n\n1. Income Tax:\n   - Tax slabs\n   - Deductions\n   - Filing process\n\n2. Tax-saving investments:\n   - 80C investments\n   - Health insurance\n   - Home loan benefits\n\n3. Important dates:\n   - Filing deadlines\n   - Advance tax\n   - TDS\n\n4. Resources:\n   - www.incometaxindia.gov.in\n   - www.gst.gov.in\n\nWould you like specific tax-related information?'
+            },
+            'banking': {
+                keywords: ['bank', 'banking', 'rbi', 'interest rates', 'loans'],
+                response: 'Banking Information:\n\n1. RBI Guidelines:\n   - Interest rates\n   - Banking regulations\n   - Financial stability\n\n2. Important Websites:\n   - www.rbi.org.in\n   - www.bankbazaar.com\n\n3. Common Services:\n   - Savings accounts\n   - Fixed deposits\n   - Loans\n   - Credit cards\n\n4. Digital Banking:\n   - UPI\n   - Net banking\n   - Mobile banking\n\nWould you like specific banking information?'
+            },
+            'investment': {
+                keywords: ['invest', 'investment', 'portfolio', 'stocks', 'bonds'],
+                response: 'Investment Guidelines:\n\n1. Start with research\n2. Diversify your portfolio\n3. Consider your risk appetite\n4. Regular monitoring\n5. Long-term perspective\n\nInvestment options:\n- Stocks\n- Mutual Funds\n- Fixed Deposits\n- Bonds\n- Real Estate\n\nImportant Resources:\n- SEBI: www.sebi.gov.in\n- NSE: www.nseindia.com\n- BSE: www.bseindia.com\n\nWould you like detailed information about any investment option?'
+            }
+        };
+
+        // Predefined responses for common queries
+        const predefinedResponses = {
+            'hello': 'Hello! How can I help you with your financial queries today?',
+            'hi': 'Hi there! I\'m your financial assistant. What would you like to know?',
+            'help': 'I can help you with:\n- Investment advice\n- Market analysis\n- Personal finance tips\n- Credit management\n- Stock market basics\n\nWhat specific topic would you like to learn about?',
+            'bye': 'Goodbye! Feel free to return if you have more questions.',
+            'thanks': 'You\'re welcome! Let me know if you need anything else.',
+            'thank you': 'You\'re welcome! Let me know if you need anything else.'
+        };
+
+        userInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        function useSuggestion(text) {
+            userInput.value = text;
+            sendMessage();
+        }
+
+        function sendMessage() {
+            const message = userInput.value.trim().toLowerCase();
+            if (!message) return;
+
+            // Add user message to chat
+            addMessage(message, 'user');
+            userInput.value = '';
+
+            // Show typing indicator
+            typingIndicator.style.display = 'block';
+            errorMessage.style.display = 'none';
+
+            // Check for predefined responses first
+            if (predefinedResponses[message]) {
+                typingIndicator.style.display = 'none';
+                addMessage(predefinedResponses[message], 'bot');
+                return;
+            }
+
+            // Search for relevant financial information
+            let response = null;
+            for (const [key, data] of Object.entries(financialKnowledge)) {
+                if (data.keywords.some(keyword => message.includes(keyword))) {
+                    response = data.response;
+                    break;
+                }
+            }
+
+            // Hide typing indicator
+            typingIndicator.style.display = 'none';
+
+            if (response) {
+                addMessage(response, 'bot');
+            } else {
+                addMessage('I understand you\'re asking about finance. Here are some general tips:\n\n1. Always do thorough research before investing\n2. Diversify your portfolio\n3. Start with small investments\n4. Keep track of your expenses\n5. Build an emergency fund\n\nWould you like to know more about any specific financial topic?', 'bot');
+            }
+        }
+
+        function addMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+            messageDiv.textContent = text;
+            chatBox.appendChild(messageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        // Add initial greeting
+        window.addEventListener('load', function() {
+            addMessage('Hello! I\'m your FinXplorers AI assistant. I can help you with:\n- Financial advice\n- Investment strategies\n- Market analysis\n- Personal finance tips\n\nHow can I assist you today?', 'bot');
+        });
+    </script>
+</body>
+</html> 

@@ -428,4 +428,23 @@ footer {
     .auth-buttons {
         margin-top: 1rem;
     }
+}
+
+.chat-btn {
+    background: #28a745;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-left: 10px;
+    transition: background 0.3s;
+}
+
+.chat-btn:hover {
+    background: #218838;
+}
+
+.chat-btn i {
+    margin-right: 5px;
 } 
