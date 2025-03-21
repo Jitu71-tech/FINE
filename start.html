@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Solutions</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+
+        .landing-page {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .dashboard {
+            display: none;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: #1976d2;
+            margin-bottom: 1rem;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            color: #666;
+            margin-bottom: 2rem;
+        }
+
+        .btn {
+            background-color: #1976d2;
+            color: white;
+            border: none;
+            padding: 12px 32px;
+            font-size: 1.2rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #1565c0;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 2rem;
+        }
+
+        .tool-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-align: center;
+        }
+
+        .tool-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+
+        .tool-icon {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            color: #1976d2;
+        }
+
+        .budget-interface, .savings-interface {
+            display: none;
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-top: 2rem;
+        }
+
+        .input-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .input-field {
+            padding: 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #1976d2;
+        }
+
+        .result {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background-color: #1976d2;
+            color: white;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            color: #1976d2;
+            font-size: 1.2rem;
+            cursor: pointer;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-btn:hover {
+            color: #1565c0;
+        }
+
+        .expense-list, .savings-progress {
+            margin-top: 1.5rem;
+            background: #f5f5f5;
+            padding: 1rem;
+            border-radius: 8px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 1rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #4caf50;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .category-list {
+            display: grid;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .category-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem;
+            background: white;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="landing-page" id="landingPage">
+        <h1>Financial Solutions Made Simple</h1>
+        <h2>Take control of your financial future with our smart tools and expert guidance</h2>
+        <button class="btn" onclick="showDashboard()">Get Started</button>
+    </div>
+
+    <div class="dashboard" id="dashboard">
+        <button class="back-btn" onclick="showLanding()">← Back to Home</button>
+        <h1>Financial Tools Dashboard</h1>
+        
+        <div class="tools-grid">
+            <div class="tool-card" onclick="showBudgetAnalyzer()">
+                <div class="tool-icon">💰</div>
+                <h3>Budget Analyzer</h3>
+                <p>Track and optimize your monthly spending with our comprehensive budget analysis tool</p>
+            </div>
+            <div class="tool-card" onclick="showSavingsGoals()">
+                <div class="tool-icon">🎯</div>
+                <h3>Savings Goals</h3>
+                <p>Set and track your savings goals with visual progress tracking and milestone alerts</p>
+            </div>
+        </div>
+
+        <div class="budget-interface" id="budgetInterface">
+            <button class="back-btn" onclick="showDashboard()">← Back to Dashboard</button>
+            <h2>Budget Analyzer</h2>
+            <div class="input-group">
+                <input type="number" class="input-field" id="monthlyIncome" placeholder="Monthly Income ($)">
+                <input type="number" class="input-field" id="monthlyExpense" placeholder="Monthly Expenses ($)">
+            </div>
+            <div class="input-group">
+                <input type="text" class="input-field" id="expenseCategory" placeholder="Expense Category">
+                <input type="number" class="input-field" id="expenseAmount" placeholder="Amount ($)">
+                <button class="btn" onclick="addExpense()">Add Expense</button>
+            </div>
+            <div class="expense-list" id="expenseList">
+                <h3>Expense Breakdown</h3>
+                <div class="category-list" id="categoryList"></div>
+            </div>
+            <div class="result" id="budgetResult"></div>
+        </div>
+
+        <div class="savings-interface" id="savingsInterface">
+            <button class="back-btn" onclick="showDashboard()">← Back to Dashboard</button>
+            <h2>Savings Goals</h2>
+            <div class="input-group">
+                <input type="number" class="input-field" id="targetAmount" placeholder="Target Amount ($)">
+                <input type="number" class="input-field" id="currentSavings" placeholder="Current Savings ($)">
+                <input type="date" class="input-field" id="targetDate" placeholder="Target Date">
+            </div>
+            <button class="btn" onclick="calculateSavings()">Set Goal</button>
+            <div class="savings-progress" id="savingsProgress">
+                <h3>Progress Towards Goal</h3>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p id="progressText"></p>
+            </div>
+            <div class="result" id="savingsResult"></div>
+        </div>
+    </div>
+
+    <script>
+        let expenses = [];
+
+        function showDashboard() {
+            document.getElementById('landingPage').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            document.getElementById('budgetInterface').style.display = 'none';
+            document.getElementById('savingsInterface').style.display = 'none';
+        }
+
+        function showLanding() {
+            document.getElementById('landingPage').style.display = 'flex';
+            document.getElementById('dashboard').style.display = 'none';
+        }
+
+        function showBudgetAnalyzer() {
+            document.getElementById('dashboard').style.display = 'block';
+            document.getElementById('budgetInterface').style.display = 'block';
+            document.getElementById('savingsInterface').style.display = 'none';
+        }
+
+        function showSavingsGoals() {
+            document.getElementById('dashboard').style.display = 'block';
+            document.getElementById('budgetInterface').style.display = 'none';
+            document.getElementById('savingsInterface').style.display = 'block';
+        }
+
+        function addExpense() {
+            const category = document.getElementById('expenseCategory').value;
+            const amount = parseFloat(document.getElementById('expenseAmount').value);
+
+            if (!category || isNaN(amount)) {
+                alert('Please enter valid category and amount');
+                return;
+            }
+
+            expenses.push({ category, amount });
+            updateExpenseList();
+            document.getElementById('expenseCategory').value = '';
+            document.getElementById('expenseAmount').value = '';
+        }
+
+        function updateExpenseList() {
+            const categoryList = document.getElementById('categoryList');
+            categoryList.innerHTML = '';
+            let total = 0;
+
+            expenses.forEach(expense => {
+                const item = document.createElement('div');
+                item.className = 'category-item';
+                item.innerHTML = `
+                    <span>${expense.category}</span>
+                    <span>$${expense.amount.toFixed(2)}</span>
+                `;
+                categoryList.appendChild(item);
+                total += expense.amount;
+            });
+
+            const monthlyIncome = parseFloat(document.getElementById('monthlyIncome').value) || 0;
+            const result = document.getElementById('budgetResult');
+            result.textContent = "Total Expenses: $${total.toFixed(2)} | Remaining Budget: $${(monthlyIncome - total).toFixed(2)}";
+            result.style.display = 'block';
+        }
+
+        function calculateSavings() {
+            const target = parseFloat(document.getElementById('targetAmount').value);
+            const current = parseFloat(document.getElementById('currentSavings').value);
+            const targetDate = new Date(document.getElementById('targetDate').value);
+
+            if (isNaN(target) || isNaN(current) || !targetDate) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            const progress = (current / target) * 100
+            document.getElementById('progressFill').style.width = "${Math.min(progress, 100)}%";
+            document.getElementById('progressText').textContent = "${progress.toFixed(1)}% of goal achieved";
+
+            const monthsLeft = Math.ceil((targetDate - new Date()) / (1000 * 60 * 60 * 24 * 30));
+            const monthlyNeeded = (target - current) / monthsLeft;
+
+            const result = document.getElementById('savingsResult');
+            result.textContent = "To reach your goal by ${targetDate.toLocaleDateString()}, you need to save $${monthlyNeeded.toFixed(2)} per month";
+            result.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
