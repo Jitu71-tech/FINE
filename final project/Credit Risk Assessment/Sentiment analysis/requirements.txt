@@ -1,0 +1,10 @@
+requests
+nltk
+pandas
+matplotlib
+flask
+transformers
+tf-keras
+scikit-learn
+joblib
+seaborn
