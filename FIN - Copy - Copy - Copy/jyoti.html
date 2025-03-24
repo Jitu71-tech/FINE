@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Planning Tools</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Single Navigation Bar -->
+    <nav class="top-nav">
+        <div class="nav-brand">
+            <i class="fas fa-chart-line"></i>
+            <span>FinanceTools</span>
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html" ><i class="fas fa-book"></i> Home</a></li>
+            <li><a href="#" class="nav-item active" data-section="loan-visualizer"><i class="fas fa-calculator"></i> Loan Visualizer</a></li>
+            <li><a href="#" class="nav-item" data-section="budget-wheel"><i class="fas fa-pie-chart"></i> Budget Wheel</a></li>
+            <li><a href="#" class="nav-item" data-section="ai-assistant"><i class="fas fa-robot"></i> AI Assistant</a></li>
+       
+        </ul>
+        <button class="mobile-menu">
+            <i class="fas fa-bars"></i>
+        </button>
+    </nav>
+
+    <header>
+        <h1>Financial Planning Tools</h1>
+    </header>
+
+    <main>
+        <!-- Loan Visualizer Section -->
+        <section id="loan-visualizer" class="tool-section active">
+            <h2>Loan Payment Visualizer</h2>
+            <div class="loan-inputs">
+                <div class="input-group">
+                    <label for="loan-amount">Loan Amount ($)</label>
+                    <input type="number" id="loan-amount" value="100000">
+                </div>
+                <div class="input-group">
+                    <label for="loan-term">Loan Term (years)</label>
+                    <input type="number" id="loan-term" value="30">
+                </div>
+                <div class="input-group">
+                    <label for="interest-rate">Interest Rate (%)</label>
+                    <input type="number" id="interest-rate" value="3.5" step="0.1">
+                </div>
+                <button id="calculate-loan">Calculate</button>
+            </div>
+            <div class="loan-results">
+                <canvas id="loanChart"></canvas>
+                <div id="loan-summary"></div>
+            </div>
+        </section>
+
+        <!-- Budget Wheel Section -->
+        <section id="budget-wheel" class="tool-section">
+            <h2>Interactive Budget Allocation</h2>
+            <div class="budget-controls">
+                <div class="budget-input">
+                    <label for="total-budget">Total Budget ($)</label>
+                    <input type="number" id="total-budget" value="5000">
+                </div>
+                <div id="category-inputs"></div>
+                <button id="update-budget">Update Budget</button>
+            </div>
+            <div id="budget-wheel-chart"></div>
+        </section>
+
+        <!-- AI Assistant Section -->
+        <section id="ai-assistant" class="tool-section">
+            <h2>Financial AI Assistant</h2>
+            <div class="chat-container">
+                <div class="chat-messages" id="chat-messages">
+                    <div class="message ai-message">
+                        <div class="message-content">
+                            Hello! I'm your financial AI assistant. I can help you with:
+                            <ul>
+                                <li>Investment advice</li>
+                                <li>Budget planning</li>
+                                <li>Loan calculations</li>
+                                <li>Tax planning</li>
+                                <li>Retirement planning</li>
+                            </ul>
+                            How can I assist you today?
+                        </div>
+                        <div class="message-icon">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="chat-input-container">
+                    <textarea id="user-input" placeholder="Ask me anything about finance..." rows="1"></textarea>
+                    <button id="send-message">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+<script>// Mobile menu functionality
+    document.querySelector('.mobile-menu').addEventListener('click', () => {
+        document.querySelector('.nav-links').classList.toggle('show');
+    });
+    
+    // Close mobile menu when clicking outside
+    document.addEventListener('click', (e) => {
+        const navLinks = document.querySelector('.nav-links');
+        const mobileMenu = document.querySelector('.mobile-menu');
+        
+        if (!mobileMenu.contains(e.target) && !navLinks.contains(e.target) && navLinks.classList.contains('show')) {
+            navLinks.classList.remove('show');
+        }
+    });
+    
+    // Navigation functionality
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            
+            // Update active state
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+            item.classList.add('active');
+            
+            // Show selected section
+            const sectionId = item.dataset.section;
+            document.querySelectorAll('.tool-section').forEach(section => {
+                section.classList.remove('active');
+                if (section.id === sectionId) {
+                    section.classList.add('active');
+                }
+            });
+            
+            // Close mobile menu if open
+            document.querySelector('.nav-links').classList.remove('show');
+        });
+    });
+    
+    // Loan Visualizer
+    class LoanVisualizer {
+        constructor() {
+            this.chart = null;
+            this.initChart();
+            this.setupEventListeners();
+        }
+    
+        initChart() {
+            const ctx = document.getElementById('loanChart').getContext('2d');
+            this.chart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Principal', 'Interest'],
+                    datasets: [{
+                        data: [0, 0],
+                        backgroundColor: ['#3498db', '#e74c3c']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+    
+        setupEventListeners() {
+            document.getElementById('calculate-loan').addEventListener('click', () => {
+                const amount = parseFloat(document.getElementById('loan-amount').value);
+                const years = parseFloat(document.getElementById('loan-term').value);
+                const rate = parseFloat(document.getElementById('interest-rate').value);
+                this.calculateLoan(amount, years, rate);
+            });
+        }
+    
+        calculateLoan(principal, years, rate) {
+            const monthlyRate = rate / 100 / 12;
+            const numberOfPayments = years * 12;
+            const monthlyPayment = principal * monthlyRate * Math.pow(1 + monthlyRate, numberOfPayments) / (Math.pow(1 + monthlyRate, numberOfPayments) - 1);
+            const totalPayment = monthlyPayment * numberOfPayments;
+            const totalInterest = totalPayment - principal;
+    
+            this.updateChart(principal, totalInterest);
+            this.updateSummary(monthlyPayment, totalPayment, totalInterest);
+        }
+    
+        updateChart(principal, totalInterest) {
+            this.chart.data.datasets[0].data = [principal, totalInterest];
+            this.chart.update();
+        }
+    
+        updateSummary(monthlyPayment, totalPayment, totalInterest) {
+            document.getElementById('loan-summary').innerHTML = `
+                <h3>Loan Summary</h3>
+                <p>Monthly Payment: $${monthlyPayment.toFixed(2)}</p>
+                <p>Total Payment: $${totalPayment.toFixed(2)}</p>
+                <p>Total Interest: $${totalInterest.toFixed(2)}</p>
+            `;
+        }
+    }
+    
+    // Budget Wheel
+    class BudgetWheel {
+        constructor() {
+            this.categories = [
+                { name: 'Housing', percentage: 30 },
+                { name: 'Transportation', percentage: 15 },
+                { name: 'Food', percentage: 15 },
+                { name: 'Utilities', percentage: 10 },
+                { name: 'Insurance', percentage: 10 },
+                { name: 'Savings', percentage: 10 },
+                { name: 'Entertainment', percentage: 5 },
+                { name: 'Other', percentage: 5 }
+            ];
+            this.initializeInputs();
+            this.createWheel();
+            this.setupEventListeners();
+        }
+    
+        initializeInputs() {
+            const container = document.getElementById('category-inputs');
+            container.innerHTML = this.categories.map(category => `
+                <div class="input-group">
+                    <label for="${category.name.toLowerCase()}">${category.name} (%)</label>
+                    <input type="number" id="${category.name.toLowerCase()}" value="${category.percentage}" min="0" max="100">
+                </div>
+            `).join('');
+        }
+    
+        createWheel() {
+            const width = 500;
+            const height = 500;
+            const radius = Math.min(width, height) / 2;
+    
+            const svg = d3.select('#budget-wheel-chart')
+                .html('')
+                .append('svg')
+                .attr('width', width)
+                .attr('height', height)
+                .append('g')
+                .attr('transform', `translate(${width / 2},${height / 2})`);
+    
+            const color = d3.scaleOrdinal(d3.schemeCategory10);
+            const pie = d3.pie().value(d => d.percentage);
+            const arc = d3.arc().innerRadius(0).outerRadius(radius);
+    
+            const arcs = svg.selectAll('arc')
+                .data(pie(this.categories))
+                .enter()
+                .append('g');
+    
+            arcs.append('path')
+                .attr('d', arc)
+                .attr('fill', (d, i) => color(i));
+    
+            arcs.append('text')
+                .attr('transform', d => `translate(${arc.centroid(d)})`)
+                .attr('text-anchor', 'middle')
+                .text(d => `${d.data.name}\n${d.data.percentage}%`)
+                .style('fill', 'white')
+                .style('font-size', '12px');
+        }
+    
+        setupEventListeners() {
+            document.getElementById('update-budget').addEventListener('click', () => {
+                let total = 0;
+                this.categories.forEach(category => {
+                    const value = parseFloat(document.getElementById(category.name.toLowerCase()).value);
+                    category.percentage = value;
+                    total += value;
+                });
+    
+                if (total !== 100) {
+                    alert('Total percentage must equal 100%');
+                    return;
+                }
+    
+                this.createWheel();
+            });
+        }
+    }
+    
+    // AI Assistant
+    class AIAssistant {
+        constructor() {
+            this.chatMessages = document.getElementById('chat-messages');
+            this.userInput = document.getElementById('user-input');
+            this.sendButton = document.getElementById('send-message');
+            this.setupEventListeners();
+        }
+    
+        setupEventListeners() {
+            this.sendButton.addEventListener('click', () => this.handleUserInput());
+            this.userInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    this.handleUserInput();
+                }
+            });
+            this.userInput.addEventListener('input', () => {
+                this.userInput.style.height = 'auto';
+                this.userInput.style.height = this.userInput.scrollHeight + 'px';
+            });
+        }
+    
+        handleUserInput() {
+            const message = this.userInput.value.trim();
+            if (!message) return;
+    
+            this.addMessage(message, 'user');
+            this.userInput.value = '';
+            this.userInput.style.height = 'auto';
+            
+            // Simulate AI thinking
+            this.sendButton.disabled = true;
+            setTimeout(() => {
+                this.generateAIResponse(message);
+                this.sendButton.disabled = false;
+            }, 1000);
+        }
+    
+        addMessage(content, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+            
+            const messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
+            messageContent.innerHTML = content;
+            
+            const messageIcon = document.createElement('div');
+            messageIcon.className = 'message-icon';
+            messageIcon.innerHTML = sender === 'user' ? 
+                '<i class="fas fa-user"></i>' : 
+                '<i class="fas fa-robot"></i>';
+            
+            messageDiv.appendChild(messageContent);
+            messageDiv.appendChild(messageIcon);
+            
+            this.chatMessages.appendChild(messageDiv);
+            this.scrollToBottom();
+        }
+    
+        scrollToBottom() {
+            this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+        }
+    
+        generateAIResponse(userMessage) {
+            // This is where you would integrate with an actual AI API
+            // For now, we'll use predefined responses based on keywords
+            const response = this.getPredefinedResponse(userMessage.toLowerCase());
+            this.addMessage(response, 'ai');
+            this.scrollToBottom();
+        }
+    
+        getPredefinedResponse(message) {
+            // Financial advice responses based on keywords
+            const responses = {
+                investment: `Here are some key investment principles:
+                    <ul>
+                        <li>Diversify your portfolio across different asset classes</li>
+                        <li>Consider your risk tolerance and investment timeline</li>
+                        <li>Regularly review and rebalance your portfolio</li>
+                        <li>Focus on long-term growth rather than short-term gains</li>
+                        <li>Consider low-cost index funds for broad market exposure</li>
+                    </ul>
+                    Would you like more specific advice about any of these aspects?`,
+                
+                budget: `Here's a basic budgeting framework:
+                    <ul>
+                        <li>50/30/20 Rule: 50% for needs, 30% for wants, 20% for savings</li>
+                        <li>Track all expenses using a budgeting app or spreadsheet</li>
+                        <li>Set specific financial goals</li>
+                        <li>Review and adjust your budget monthly</li>
+                        <li>Build an emergency fund of 3-6 months of expenses</li>
+                    </ul>
+                    Would you like help creating a detailed budget plan?`,
+                
+                loan: `When considering a loan, keep these points in mind:
+                    <ul>
+                        <li>Compare interest rates from multiple lenders</li>
+                        <li>Consider the total cost including fees</li>
+                        <li>Check your credit score before applying</li>
+                        <li>Calculate your debt-to-income ratio</li>
+                        <li>Understand the terms and conditions fully</li>
+                    </ul>
+                    Would you like to use our loan calculator to estimate payments?`,
+                
+                tax: `Here are some tax planning tips:
+                    <ul>
+                        <li>Maximize tax-advantaged accounts (401(k), IRA)</li>
+                        <li>Keep track of deductible expenses</li>
+                        <li>Consider tax-loss harvesting for investments</li>
+                        <li>Stay updated on tax law changes</li>
+                        <li>Consult with a tax professional for complex situations</li>
+                    </ul>
+                    Would you like more specific tax planning advice?`,
+                
+                retirement: `Key retirement planning steps:
+                    <ul>
+                        <li>Start saving early and consistently</li>
+                        <li>Take advantage of employer retirement plans</li>
+                        <li>Consider opening an IRA</li>
+                        <li>Calculate your retirement needs</li>
+                        <li>Plan for healthcare costs in retirement</li>
+                    </ul>
+                    Would you like help calculating your retirement savings needs?`,
+                
+                default: `I can help you with various financial topics including:
+                    <ul>
+                        <li>Investment strategies</li>
+                        <li>Budget planning</li>
+                        <li>Loan calculations</li>
+                        <li>Tax planning</li>
+                        <li>Retirement planning</li>
+                    </ul>
+                    What specific financial topic would you like to learn more about?`
+            };
+    
+            // Check for keywords in the message
+            for (const [keyword, response] of Object.entries(responses)) {
+                if (message.includes(keyword)) {
+                    return response;
+                }
+            }
+    
+            // If no specific keyword is found, return the default response
+            return responses.default;
+        }
+    }
+    
+    // Initialize tools
+    document.addEventListener('DOMContentLoaded', () => {
+        new LoanVisualizer();
+        new BudgetWheel();
+        new AIAssistant();
+    });</script>
+
+    <style>
+        :root {
+    --primary-color: #2c3e50;
+    --secondary-color: #3498db;
+    --accent-color: #e74c3c;
+    --background-color: #f5f6fa;
+    --text-color: #2c3e50;
+    --border-radius: 8px;
+    --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+/* Top Navigation Bar */
+.top-nav {
+    background-color: white;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.nav-brand i {
+    color: var(--secondary-color);
+}
+
+.nav-links {
+    display: flex;
+    gap: 2rem;
+    list-style: none;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: var(--text-color);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    transition: all 0.3s;
+    border-radius: var(--border-radius);
+}
+
+.nav-links a:hover {
+    color: var(--secondary-color);
+    background-color: var(--background-color);
+}
+
+.nav-links a.active {
+    color: var(--secondary-color);
+    background-color: var(--background-color);
+}
+
+.mobile-menu {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    cursor: pointer;
+}
+
+header {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 2rem;
+    text-align: center;
+}
+
+h1 {
+    margin-bottom: 1rem;
+    font-size: 2.5rem;
+}
+
+.tool-nav {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.nav-btn {
+    padding: 0.8rem 1.5rem;
+    border: none;
+    border-radius: var(--border-radius);
+    background-color: transparent;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-size: 1rem;
+}
+
+.nav-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav-btn.active {
+    background-color: var(--secondary-color);
+}
+
+main {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.tool-section {
+    display: none;
+    background-color: white;
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+}
+
+.tool-section.active {
+    display: block;
+}
+
+h2 {
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+    font-size: 1.8rem;
+}
+
+.input-group {
+    margin-bottom: 1rem;
+}
+
+label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
+    font-weight: 500;
+}
+
+input, select {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid #ddd;
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+}
+
+button {
+    background-color: var(--secondary-color);
+    color: white;
+    padding: 0.8rem 1.5rem;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #2980b9;
+}
+
+/* Loan Visualizer Section */
+.loan-inputs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+/* Budget Wheel Section */
+.budget-controls {
+    display: grid;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+#category-inputs {
+    display: grid;
+    gap: 1rem;
+}
+
+/* Canvas Containers */
+canvas {
+    width: 100% !important;
+    height: 400px !important;
+    margin: 1rem 0;
+}
+
+/* AI Assistant Chat Styles */
+.chat-container {
+    background-color: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    height: 600px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.message {
+    display: flex;
+    gap: 1rem;
+    max-width: 80%;
+}
+
+.message.user-message {
+    align-self: flex-end;
+    flex-direction: row-reverse;
+}
+
+.message.ai-message {
+    align-self: flex-start;
+}
+
+.message-content {
+    background-color: var(--background-color);
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.user-message .message-content {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+.message-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--secondary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    flex-shrink: 0;
+}
+
+.user-message .message-icon {
+    background-color: var(--accent-color);
+}
+
+.chat-input-container {
+    padding: 1rem;
+    border-top: 1px solid #eee;
+    display: flex;
+    gap: 1rem;
+    background-color: white;
+}
+
+#user-input {
+    flex: 1;
+    padding: 0.8rem;
+    border: 1px solid #ddd;
+    border-radius: var(--border-radius);
+    resize: none;
+    font-family: inherit;
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+#send-message {
+    padding: 0.8rem 1.2rem;
+    border-radius: var(--border-radius);
+    background-color: var(--secondary-color);
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#send-message:hover {
+    background-color: #2980b9;
+}
+
+/* Scrollbar Styles */
+.chat-messages::-webkit-scrollbar {
+    width: 8px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Message List Styles */
+.message-content ul {
+    margin: 0.5rem 0;
+    padding-left: 1.5rem;
+}
+
+.message-content li {
+    margin: 0.25rem 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .top-nav {
+        padding: 1rem;
+    }
+
+    .nav-links {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background-color: white;
+        flex-direction: column;
+        gap: 0;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        padding: 1rem 0;
+    }
+
+    .nav-links.show {
+        display: flex;
+    }
+
+    .nav-links a {
+        padding: 1rem 2rem;
+        border-bottom: 1px solid #eee;
+    }
+
+    .mobile-menu {
+        display: block;
+    }
+
+    .loan-inputs {
+        grid-template-columns: 1fr;
+    }
+    
+    #category-inputs {
+        grid-template-columns: 1fr;
+    }
+
+    .message {
+        max-width: 90%;
+    }
+    
+.chat-container {
+    height: calc(100vh - 300px);
+}
+}
+    </style>
+    <script src="script.js"></script>
+</body>
+</html>
